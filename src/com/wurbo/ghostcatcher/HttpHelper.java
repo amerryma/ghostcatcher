@@ -26,173 +26,171 @@ import android.os.StrictMode;
 import android.util.Log;
 
 public class HttpHelper {
-	@TargetApi(9)
-	public static boolean validateLogin(String user, String pass)
-			throws IOException {
+    @TargetApi(9)
+    public static boolean validateLogin(String user, String pass)
+            throws IOException {
 
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                .permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
-		StringBuilder urlStr = new StringBuilder();
-		urlStr.append("http://www.wurbo.com/mysql/login.php")
-				.append("?user=").append(user)
-				.append("&pass=").append(pass)
-				.append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
-				.append("&noCache=").append(new Date().getTime());
+        StringBuilder urlStr = new StringBuilder();
+        urlStr.append("http://www.wurbo.com/mysql/login.php").append("?user=")
+                .append(user).append("&pass=").append(pass)
+                .append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
+                .append("&noCache=").append(new Date().getTime());
 
-		return executeAndWait(urlStr.toString()).contains("equal!");
-	}
+        return executeAndWait(urlStr.toString()).contains("equal!");
+    }
 
-	@TargetApi(9)
-	public static int getHighscore(String user)
-			throws IOException {
-		int highscore = 0;
+    @TargetApi(9)
+    public static int getHighscore(String user) throws IOException {
+        int highscore = 0;
 
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                .permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
-		StringBuilder urlStr = new StringBuilder();
-		urlStr.append("http://www.wurbo.com/mysql/highscores.php")
-				.append("?hname=").append(user)
-				.append("&action=load")
-				.append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
-				.append("&game=ghostcatcher");
-		
-		String response = executeAndWait(urlStr.toString());
-		
-		boolean found = false;
-		String[] splitStr = response.split("<br/>");
-		int i = 0;
-		while (!found && i < splitStr.length) {
-			String str = splitStr[i];
-			i++;
-			if (str.contains("highscore")) {
-				try {
-					highscore = Integer.parseInt(str.split(":")[1].trim());
-					found = true;
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+        StringBuilder urlStr = new StringBuilder();
+        urlStr.append("http://www.wurbo.com/mysql/highscores.php")
+                .append("?hname=").append(user).append("&action=load")
+                .append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
+                .append("&game=ghostcatcher");
 
-		return highscore;
-	}
+        String response = executeAndWait(urlStr.toString());
 
-	@TargetApi(9)
-	public static boolean setHighscore(String user, int score)
-			throws IOException {
+        boolean found = false;
+        String[] splitStr = response.split("<br/>");
+        int i = 0;
+        while (!found && i < splitStr.length) {
+            String str = splitStr[i];
+            i++;
+            if (str.contains("highscore")) {
+                try {
+                    highscore = Integer.parseInt(str.split(":")[1].trim());
+                    found = true;
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+        return highscore;
+    }
 
-		StringBuilder urlStr = new StringBuilder();
-		urlStr.append("http://www.wurbo.com/mysql/highscores.php")
-				.append("?hname=").append(user)
-				.append("&score=").append(score)
-				.append("&action=save")
-				.append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
-				.append("&game=ghostcatcher");
-		
-		execute(urlStr.toString());
+    @TargetApi(9)
+    public static boolean setHighscore(String user, int score)
+            throws IOException {
 
-		return true;
-	}
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                .permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
-	@TargetApi(9)
-	public static List<String> getHighscores() throws IOException {
+        StringBuilder urlStr = new StringBuilder();
+        urlStr.append("http://www.wurbo.com/mysql/highscores.php")
+                .append("?hname=").append(user).append("&score=").append(score)
+                .append("&action=save")
+                .append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
+                .append("&game=ghostcatcher");
 
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+        execute(urlStr.toString());
 
-		StringBuilder urlStr = new StringBuilder();
-		urlStr.append("http://www.wurbo.com/mysql/highscores.php")
-				.append("?action=loadAll")
-				.append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
-				.append("&game=ghostcatcher");
-		
-		String response = executeAndWait(urlStr.toString());
-		List<String> highscores = new ArrayList<String>();
-		for (String str : response.split("<br/>")) {
-			if (str.contains("username")) {
-				highscores.add(str.split(":")[1]);
-			}
-		}
-		
-		return highscores;
-	}
+        return true;
+    }
 
-	private static String executeAndWait(String urlStr) {
-		String response = "";
-		
-		AsyncTask<String, Integer, String> task = new UrlAsynTask().execute(urlStr);
+    @TargetApi(9)
+    public static List<String> getHighscores() throws IOException {
 
-		try {
-			response = task.get(5000, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return response;
-	}
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                .permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
-	private static void execute(String urlStr) {
-		AsyncTask<String, Integer, String> task = new UrlAsynTask().execute(urlStr);
-	}
+        StringBuilder urlStr = new StringBuilder();
+        urlStr.append("http://www.wurbo.com/mysql/highscores.php")
+                .append("?action=loadAll")
+                .append("&key=e674be169f87bd39a6efcc70c600de8b41574a5e")
+                .append("&game=ghostcatcher");
+
+        String response = executeAndWait(urlStr.toString());
+        List<String> highscores = new ArrayList<String>();
+        for (String str : response.split("<br/>")) {
+            if (str.contains("username")) {
+                highscores.add(str.split(":")[1]);
+            }
+        }
+
+        return highscores;
+    }
+
+    private static String executeAndWait(String urlStr) {
+        String response = "";
+
+        AsyncTask<String, Integer, String> task = new UrlAsynTask()
+                .execute(urlStr);
+
+        try {
+            response = task.get(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return response;
+    }
+
+    private static void execute(String urlStr) {
+        AsyncTask<String, Integer, String> task = new UrlAsynTask()
+                .execute(urlStr);
+    }
 }
 
 class UrlAsynTask extends AsyncTask<String, Integer, String> {
 
-	@Override
-	protected void onPreExecute() {
-		super.onPreExecute();
-	}
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+    }
 
-	@Override
-	protected void onPostExecute(String result) {
-		// set the results in Ui
+    @Override
+    protected void onPostExecute(String result) {
+        // set the results in Ui
 
-	}
+    }
 
-	@Override
-	protected String doInBackground(String... arg) {
-		StringBuilder data = new StringBuilder();
+    @Override
+    protected String doInBackground(String... arg) {
+        StringBuilder data = new StringBuilder();
 
-		try {
-			URL url = new URL(arg[0]);
-			HttpGet httpRequest = null;
+        try {
+            URL url = new URL(arg[0]);
+            HttpGet httpRequest = null;
 
-			httpRequest = new HttpGet(url.toURI());
+            httpRequest = new HttpGet(url.toURI());
 
-			HttpClient httpclient = new DefaultHttpClient();
-			HttpResponse response = (HttpResponse) httpclient
-					.execute(httpRequest);
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpResponse response = (HttpResponse) httpclient
+                    .execute(httpRequest);
 
-			HttpEntity entity = response.getEntity();
-			BufferedHttpEntity bufHttpEntity = new BufferedHttpEntity(entity);
-			InputStream input = bufHttpEntity.getContent();
-			BufferedReader in = new BufferedReader(new InputStreamReader(input));
-			String inputLine;
-			while ((inputLine = in.readLine()) != null) {
-				data.append(inputLine);
-			}
-			in.close();
+            HttpEntity entity = response.getEntity();
+            BufferedHttpEntity bufHttpEntity = new BufferedHttpEntity(entity);
+            InputStream input = bufHttpEntity.getContent();
+            BufferedReader in = new BufferedReader(new InputStreamReader(input));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                data.append(inputLine);
+            }
+            in.close();
 
-		} catch (MalformedURLException e) {
-			//Log.e("ghosthunter", "Bad Url", e);
-		} catch (Exception e) {
-			//Log.e("ghosthunter", "IO Error", e);
-		}
-		return data.toString();
-	}
+        } catch (MalformedURLException e) {
+            // Log.e("ghosthunter", "Bad Url", e);
+        } catch (Exception e) {
+            // Log.e("ghosthunter", "IO Error", e);
+        }
+        return data.toString();
+    }
 }
