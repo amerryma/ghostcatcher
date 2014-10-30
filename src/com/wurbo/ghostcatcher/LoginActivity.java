@@ -42,7 +42,7 @@ public class LoginActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        // beginUserInitiatedSignIn();
+        //beginUserInitiatedSignIn();
 
         userInput = (EditText) findViewById(R.id.userInput);
         passInput = (EditText) findViewById(R.id.passInput);

@@ -1,11 +1,8 @@
 package com.wurbo.ghostcatcher;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -14,7 +11,6 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.graphics.drawable.PictureDrawable;
 import android.os.SystemClock;
@@ -28,6 +24,9 @@ import android.view.WindowManager;
 
 import com.larvalabs.svgandroid.SVG;
 import com.larvalabs.svgandroid.SVGParser;
+import com.wurbo.ghostcatcher.entities.Entity;
+import com.wurbo.ghostcatcher.entities.Ghost;
+import com.wurbo.ghostcatcher.entities.Player;
 
 public class GameSurfaceView extends SurfaceView implements
         SurfaceHolder.Callback {
@@ -38,7 +37,7 @@ public class GameSurfaceView extends SurfaceView implements
     PictureDrawable background;
     private float cursorX = 0;
     private float cursorY = 0;
-    Ghost you;
+    Player you;
     Paint redPaint;
     Paint goldPaint;
     Paint greenPaint;
@@ -49,12 +48,6 @@ public class GameSurfaceView extends SurfaceView implements
     int numGhosts = 50;
     private long timeDiff;
     private long lastTime;
-    private float minSize = 50;
-    private float maxSize = 2000;
-    private boolean shieldOn = false;
-    private int shieldTime = 0;
-    private double shieldStopTime = 0;
-    private int score = 0;
     Typeface tf;
     private boolean paused = false;
 
@@ -72,8 +65,7 @@ public class GameSurfaceView extends SurfaceView implements
         getHolder().addCallback(this);
 
         // Username/highscore stuff:
-        sharedPreferences = context.getSharedPreferences("userrecords",
-                Context.MODE_PRIVATE);
+        sharedPreferences = context.getSharedPreferences("userrecords", Context.MODE_PRIVATE);
         LEADERBOARD_ID = context.getString(R.string.leaderboard_largest_size);
 
         if (username.trim().equals("")) {
@@ -94,14 +86,12 @@ public class GameSurfaceView extends SurfaceView implements
         tf = Typeface.createFromAsset(context.getAssets(), "gooddog.otf");
 
         // Load SVGS
-        SVG svg = SVGParser
-                .getSVGFromResource(getResources(), R.raw.ghostbasic);
+        SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.ghostbasic);
         ghostBase = svg.createPictureDrawable();
 
         // Get window height/width
         DisplayMetrics displaymetrics = new DisplayMetrics();
-        WindowManager windowManager = (WindowManager) context
-                .getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
         width = display.getWidth();
         height = display.getHeight();
@@ -132,7 +122,7 @@ public class GameSurfaceView extends SurfaceView implements
         smallBgPaint.setTextSize((int) (height * .05));
         smallBgPaint.setTypeface(tf);
 
-        you = new Ghost(100, (int) width, (int) height); // Create the player
+        you = new Player(100, (int) width, (int) height); // Create the player
         you.setY((float) (height * .8));
         you.setSize(100);
 
@@ -198,30 +188,16 @@ public class GameSurfaceView extends SurfaceView implements
             timeDiff = SystemClock.elapsedRealtime() - lastTime;
             lastTime = SystemClock.elapsedRealtime();
 
-            if (shieldStopTime < Math
-                    .ceil(SystemClock.elapsedRealtime() / 1000)) {
-                if (!shieldOn) {
-                    you.setShield(false);
-                }
-                shieldOn = false;
-            } else {
-                if (shieldOn) {
-                    you.setShield(true);
-                    shieldTime = (int) (shieldStopTime - Math.ceil(SystemClock
-                            .elapsedRealtime() / 1000));
-                }
-                shieldOn = true;
-            }
+            you.update(timeDiff);
 
             for (Ghost ghost : ghosts) {
                 ghost.moveY(ghost.getSpeed() * timeDiff);
-                drawGhost(canvas, ghost);
+                drawEntity(canvas, ghost);
                 if (ghost.getY() > canvas.getHeight()) {
                     ghost.random(canvas.getHeight(), canvas.getWidth());
                 }
                 float dx = you.getX() - ghost.getX();
-                float dy = (you.getY() + (you.getSize() / 2))
-                        - (ghost.getY() + (ghost.getSize() / 2));
+                float dy = (you.getY() + (you.getSize() / 2)) - (ghost.getY() + (ghost.getSize() / 2));
                 float radii = (float) ((you.getSize() + ghost.getSize()) / 2);
 
                 if ((dx * dx) + (dy * dy) < radii * radii) {
@@ -230,7 +206,7 @@ public class GameSurfaceView extends SurfaceView implements
                         changeSize("+1");
                         break;
                     case RED: // red
-                        if (!shieldOn) {
+                        if (!you.isShieldOn()) {
                             changeSize("-10");
                         }
                         break;
@@ -244,9 +220,7 @@ public class GameSurfaceView extends SurfaceView implements
                         changeSize("*1.1");
                         break;
                     case GREEN: // green
-                        shieldTime += 5;
-                        shieldStopTime = (int) (Math.floor(SystemClock
-                                .elapsedRealtime() / 1000) + shieldTime);
+                        you.increaseShieldTime(5000);
                         break;
                     default:
                         break;
@@ -255,19 +229,19 @@ public class GameSurfaceView extends SurfaceView implements
                 }
             }
             you.moveX((cursorX - you.getX()) / 2);
-            drawGhost(canvas, you);
+            drawEntity(canvas, you);
 
-            score = (int) you.getUnscaledSize();
+            you.setScore((int) you.getUnscaledSize());
 
             // Show gold paint if score is current or better than highscore
-            if (score >= highscore) {
+            if (you.getScore() >= highscore) {
                 scorePaint = goldPaint;
             }
 
             // Only update the shared preferences if the highscore is actually
             // larger
-            if (score > highscore) {
-                highscore = score;
+            if (you.getScore() > highscore) {
+                highscore = you.getScore();
 
                 // Because we can't update the highscore as quick as they can
                 // achieve them. We will only update as fast as 1 time per 5
@@ -292,33 +266,26 @@ public class GameSurfaceView extends SurfaceView implements
             }
         } else {
             for (Ghost ghost : ghosts) {
-                drawGhost(canvas, ghost);
+                drawEntity(canvas, ghost);
             }
 
-            drawGhost(canvas, you);
+            drawEntity(canvas, you); // TODO see if this can be moved out of the
+                                     // if-else
 
-            canvas.drawText("Paused", (float) (canvas.getWidth() * .1) + 10,
-                    (float) (canvas.getHeight() * .5) + 10, bgPaint);
-            canvas.drawText("Paused", (float) (canvas.getWidth() * .1),
-                    (float) (canvas.getHeight() * .5), redPaint);
+            canvas.drawText("Paused", (float) (canvas.getWidth() * .1) + 10, (float) (canvas.getHeight() * .5) + 10, bgPaint);
+            canvas.drawText("Paused", (float) (canvas.getWidth() * .1), (float) (canvas.getHeight() * .5), redPaint);
         }
 
-        String scoreText = "" + score;
+        String scoreText = "" + you.getScore();
         String highscoreText = "High Score: " + highscore;
-        String shieldText = "Shield Time: " + shieldTime;
+        String shieldText = "Shield Time: " + (int) (you.getShieldTime() / 1000);
 
-        canvas.drawText(scoreText, 10, (float) (canvas.getHeight() * .1) + 10,
-                bgPaint);
-        canvas.drawText(scoreText, 0, (float) (canvas.getHeight() * .1),
-                scorePaint);
-        canvas.drawText(highscoreText, 2, (float) (canvas.getHeight()) + 2,
-                smallBgPaint);
-        canvas.drawText(highscoreText, 0, (float) (canvas.getHeight()),
-                greenPaint);
-        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5) + 2,
-                (float) (canvas.getHeight()) + 2, smallBgPaint);
-        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5),
-                (float) (canvas.getHeight()), greenPaint);
+        canvas.drawText(scoreText, 10, (float) (canvas.getHeight() * .1) + 10, bgPaint);
+        canvas.drawText(scoreText, 0, (float) (canvas.getHeight() * .1), scorePaint);
+        canvas.drawText(highscoreText, 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
+        canvas.drawText(highscoreText, 0, (float) (canvas.getHeight()), greenPaint);
+        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5) + 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
+        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5), (float) (canvas.getHeight()), greenPaint);
     }
 
     public boolean isPaused() {
@@ -330,10 +297,6 @@ public class GameSurfaceView extends SurfaceView implements
 
         // reset timer
         lastTime = SystemClock.elapsedRealtime();
-
-        if (shieldOn) {
-            shieldStopTime = (lastTime / 1000) + shieldTime;
-        }
     }
 
     private void changeSize(String string) {
@@ -358,18 +321,17 @@ public class GameSurfaceView extends SurfaceView implements
             tempSize = newNum;
             break;
         }
-        if (tempSize < minSize) {
-            tempSize = minSize;
-        } else if (tempSize > maxSize) {
-            tempSize = maxSize;
+        if (tempSize < you.getMinSize()) {
+            tempSize = you.getMinSize();
+        } else if (tempSize > you.getMaxSize()) {
+            tempSize = you.getMaxSize();
         }
         you.setSize(tempSize);
     }
 
-    private void drawGhost(Canvas canvas, Ghost ghost) {
-        canvas.drawPicture(ghostBase.getPicture(), ghost);
-        canvas.drawCircle(ghost.getX(), ghost.getY() + ghost.getOffset(),
-                ghost.getOffset(), ghost.getPaint());
+    private void drawEntity(Canvas canvas, Entity entity) {
+        canvas.drawPicture(ghostBase.getPicture(), entity);
+        canvas.drawCircle(entity.getX(), entity.getY() + entity.getOffset(), entity.getOffset(), entity.getPaint());
     }
 
     @Override
