@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="app_name">Ghost Catcher</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">Ghost Catcher</string>
+    <string name="title_activity_highscore">HighscoreActivity</string>
+    <string name="title_game">Ghost Catcher v3</string>
+
+</resources>
