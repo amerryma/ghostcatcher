@@ -34,6 +34,7 @@ public class GameSurfaceView extends SurfaceView implements
     private long height, width;
     public static final String TAG = GameSurfaceView.class.getSimpleName();
     PictureDrawable ghostBase;
+    PictureDrawable playerBase;
     PictureDrawable background;
     private float cursorX = 0;
     private float cursorY = 0;
@@ -88,6 +89,8 @@ public class GameSurfaceView extends SurfaceView implements
         // Load SVGS
         SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.ghostbasic);
         ghostBase = svg.createPictureDrawable();
+        svg = SVGParser.getSVGFromResource(getResources(), R.raw.ghostbasic);
+        playerBase = svg.createPictureDrawable();
 
         // Get window height/width
         DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -122,12 +125,12 @@ public class GameSurfaceView extends SurfaceView implements
         smallBgPaint.setTextSize((int) (height * .05));
         smallBgPaint.setTypeface(tf);
 
-        you = new Player(100, (int) width, (int) height); // Create the player
+        you = new Player(100, (int) width, (int) height, playerBase); // Create the player
         you.setY((float) (height * .8));
         you.setSize(100);
 
         for (int i = 0; i < numGhosts; i++) {
-            Ghost ghost = new Ghost(50, (int) width, (int) height);
+            Ghost ghost = new Ghost(50, (int) width, (int) height, ghostBase);
             ghost.random((int) width, (int) height);
             ghost.setFlipped(true);
             ghosts.add(ghost);
@@ -192,7 +195,6 @@ public class GameSurfaceView extends SurfaceView implements
 
             for (Ghost ghost : ghosts) {
                 ghost.moveY(ghost.getSpeed() * timeDiff);
-                drawEntity(canvas, ghost);
                 if (ghost.getY() > canvas.getHeight()) {
                     ghost.random(canvas.getHeight(), canvas.getWidth());
                 }
@@ -215,8 +217,9 @@ public class GameSurfaceView extends SurfaceView implements
                         break;
                     case BLACK: // black
                         changeSize("/2");
+                        you.setShieldTime(0);
                         break;
-                    case BLUE: // orange
+                    case BLUE: // blue
                         changeSize("*1.1");
                         break;
                     case GREEN: // green
@@ -227,9 +230,10 @@ public class GameSurfaceView extends SurfaceView implements
                     }
                     ghost.random(canvas.getHeight(), canvas.getWidth());
                 }
+                drawEntity(canvas, ghost);
             }
             you.moveX((cursorX - you.getX()) / 2);
-            drawEntity(canvas, you);
+            you.moveY((cursorY - you.getY() - (you.height()/2)) / 2); //TODO Factor in finger size
 
             you.setScore((int) you.getUnscaledSize());
 
@@ -269,12 +273,11 @@ public class GameSurfaceView extends SurfaceView implements
                 drawEntity(canvas, ghost);
             }
 
-            drawEntity(canvas, you); // TODO see if this can be moved out of the
-                                     // if-else
-
             canvas.drawText("Paused", (float) (canvas.getWidth() * .1) + 10, (float) (canvas.getHeight() * .5) + 10, bgPaint);
             canvas.drawText("Paused", (float) (canvas.getWidth() * .1), (float) (canvas.getHeight() * .5), redPaint);
         }
+
+        drawEntity(canvas, you);
 
         String scoreText = "" + you.getScore();
         String highscoreText = "High Score: " + highscore;
@@ -330,7 +333,7 @@ public class GameSurfaceView extends SurfaceView implements
     }
 
     private void drawEntity(Canvas canvas, Entity entity) {
-        canvas.drawPicture(ghostBase.getPicture(), entity);
+        canvas.drawPicture(entity.basePicture(), entity);
         canvas.drawCircle(entity.getX(), entity.getY() + entity.getOffset(), entity.getOffset(), entity.getPaint());
     }
 

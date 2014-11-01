@@ -3,7 +3,9 @@ package com.wurbo.ghostcatcher.entities;
 import java.util.Random;
 
 import android.graphics.Paint;
+import android.graphics.Picture;
 import android.graphics.RectF;
+import android.graphics.drawable.PictureDrawable;
 
 public class Entity extends RectF {
 
@@ -17,14 +19,16 @@ public class Entity extends RectF {
     private boolean flipped = false;
     protected Random rand;
     protected Paint paint;
+    private Picture basePicture;
 
-    public Entity(float size, int screenWidth, int screenHeight) {
+    public Entity(float size, int screenWidth, int screenHeight, PictureDrawable baseImage) {
         rand = new Random();
         paint = new Paint();
         //Create ratio for width for target width of 720px
         this.widthRatio = (float) (screenWidth / 720.0);
         this.heightRatio = (float) (screenHeight / 1080.0);
         this.size = size;
+        this.basePicture = baseImage.getPicture();
     }
 
     public float getSize() {
@@ -106,5 +110,9 @@ public class Entity extends RectF {
 
     public Paint getPaint() {
         return paint;
+    }
+
+    public Picture basePicture() {
+        return basePicture;
     }
 }

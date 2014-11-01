@@ -1,5 +1,7 @@
 package com.wurbo.ghostcatcher.entities;
 
+import android.graphics.drawable.PictureDrawable;
+
 
 public class Ghost extends Entity {
     public enum GhostType {
@@ -8,8 +10,8 @@ public class Ghost extends Entity {
 
     private GhostType type;
 
-    public Ghost(float size, int screenWidth, int screenHeight) {
-        super(size, screenWidth, screenHeight);
+    public Ghost(float size, int screenWidth, int screenHeight, PictureDrawable ghostBase) {
+        super(size, screenWidth, screenHeight, ghostBase);
         paint.setARGB(0, 0, 0, 0);
         setType(GhostType.WHITE);
     }

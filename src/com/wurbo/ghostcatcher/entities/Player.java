@@ -1,14 +1,16 @@
 package com.wurbo.ghostcatcher.entities;
 
+import android.graphics.drawable.PictureDrawable;
+
 
 public class Player extends Entity {
     private float minSize = 50;
     private float maxSize = 2000;
-    private long shieldTime = 0;
+    private long shieldTime = 10000;
     private int score = 0;
 
-    public Player(float size, int screenWidth, int screenHeight) {
-        super(size, screenWidth, screenHeight);
+    public Player(float size, int screenWidth, int screenHeight, PictureDrawable playerBase) {
+        super(size, screenWidth, screenHeight, playerBase);
         paint.setARGB(0, 0, 0, 0);
     }
     
