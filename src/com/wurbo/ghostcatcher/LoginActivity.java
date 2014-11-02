@@ -2,13 +2,6 @@ package com.wurbo.ghostcatcher;
 
 import java.io.IOException;
 
-//import com.google.android.gms.games.GamesClient;
-//import com.google.android.gms.games.GamesClient.Builder;
-import com.google.android.gms.common.*;
-//import com.google.example.games.basegameutils.BaseGameActivity;
-//import com.google.example.games.basegameutils.GameHelper;
-//import com.google.example.games.basegameutils.GameHelper.GameHelperListener;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -25,6 +18,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+//import com.google.android.gms.games.GamesClient;
+//import com.google.android.gms.games.GamesClient.Builder;
+//import com.google.example.games.basegameutils.BaseGameActivity;
+//import com.google.example.games.basegameutils.GameHelper;
+//import com.google.example.games.basegameutils.GameHelper.GameHelperListener;
 
 public class LoginActivity extends Activity {
 

@@ -232,8 +232,8 @@ public class GameSurfaceView extends SurfaceView implements
                 }
                 drawEntity(canvas, ghost);
             }
-            you.moveX((cursorX - you.getX()) / 2);
-            you.moveY((cursorY - you.getY() - (you.height()/2)) / 2); //TODO Factor in finger size
+            you.moveX((cursorX - you.getX()) / 1.1f);
+            you.moveY((cursorY - you.getY() - (you.height()/2)) / 1.1f); //TODO Factor in finger size
 
             you.setScore((int) you.getUnscaledSize());
 
