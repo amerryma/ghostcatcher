@@ -67,7 +67,7 @@ public class Ghost extends Entity {
             }
         }
         setPos(randRange(0, (int) (height - getSize())), randRange(-width, 0));
-        setSpeed((float) (randRange(280, 560) / 1000.0));
+        setSpeed((float) (randRange(560, 840) / 1000.0));
     }
 
     public GhostType getType() {

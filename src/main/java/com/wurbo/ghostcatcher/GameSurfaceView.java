@@ -43,6 +43,7 @@ public class GameSurfaceView extends SurfaceView implements
     Paint goldPaint;
     Paint greenPaint;
     Paint bgPaint;
+    Paint smallGoldPaint;
     Paint smallBgPaint;
     Paint scorePaint;
     List<Ghost> ghosts = new ArrayList<Ghost>();
@@ -120,6 +121,11 @@ public class GameSurfaceView extends SurfaceView implements
         greenPaint.setTextSize((int) (height * .05));
         greenPaint.setTypeface(tf);
 
+        smallGoldPaint = new Paint();
+        smallGoldPaint.setARGB(100, 255, 204, 0);
+        smallGoldPaint.setTextSize((int) (height * .05));
+        smallGoldPaint.setTypeface(tf);
+
         smallBgPaint = new Paint();
         smallBgPaint.setARGB(100, 0, 0, 0);
         smallBgPaint.setTextSize((int) (height * .05));
@@ -128,6 +134,7 @@ public class GameSurfaceView extends SurfaceView implements
         you = new Player(100, (int) width, (int) height, playerBase); // Create the player
         you.setY((float) (height * .8));
         you.setSize(100);
+        you.setSpeed(280 / 1000f); // Player moves as the slowest ghost
 
         for (int i = 0; i < numGhosts; i++) {
             Ghost ghost = new Ghost(50, (int) width, (int) height, ghostBase);
@@ -220,7 +227,7 @@ public class GameSurfaceView extends SurfaceView implements
                         you.setShieldTime(0);
                         break;
                     case BLUE: // blue
-                        changeSize("*1.1");
+                        you.increaseFreeMovementTime(5000);
                         break;
                     case GREEN: // green
                         you.increaseShieldTime(5000);
@@ -232,8 +239,22 @@ public class GameSurfaceView extends SurfaceView implements
                 }
                 drawEntity(canvas, ghost);
             }
-            you.moveX((cursorX - you.getX()) / 1.1f);
-            you.moveY((cursorY - you.getY() - (you.height()/2)) / 1.1f); //TODO Factor in finger size
+
+            you.moveX((cursorX - you.getX()) / 2);
+            if (you.isFreeMoving()) {
+                float fingerSize = canvas.getHeight() * .1f;
+                you.moveY((cursorY - you.getY() - (you.height()/2) - fingerSize) / 1.1f); //TODO Factor in finger size
+            } else {
+                float dest = (float) (height * .8);
+                Log.d(TAG, "You: " + String.valueOf(you.getY()));
+                Log.d(TAG, "Dest:" + String.valueOf(dest));
+                if (you.getY() < dest) {
+                    you.moveY(you.getSpeed() * timeDiff);
+                }
+                if (you.getY() > dest) {
+                    you.setY(dest);
+                }
+            }
 
             you.setScore((int) you.getUnscaledSize());
 
@@ -280,15 +301,18 @@ public class GameSurfaceView extends SurfaceView implements
         drawEntity(canvas, you);
 
         String scoreText = "" + you.getScore();
-        String highscoreText = "High Score: " + highscore;
-        String shieldText = "Shield Time: " + (int) (you.getShieldTime() / 1000);
+        String highscoreText = "High: " + highscore;
+        String shieldText = "Shield: " + (int) (you.getShieldTime() / 1000);
+        String freeMovingText = "Free: " + (int) (you.getFreeMovementTime() / 1000);
 
         canvas.drawText(scoreText, 10, (float) (canvas.getHeight() * .1) + 10, bgPaint);
         canvas.drawText(scoreText, 0, (float) (canvas.getHeight() * .1), scorePaint);
         canvas.drawText(highscoreText, 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
-        canvas.drawText(highscoreText, 0, (float) (canvas.getHeight()), greenPaint);
-        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5) + 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
-        canvas.drawText(shieldText, (float) (canvas.getWidth() * .5), (float) (canvas.getHeight()), greenPaint);
+        canvas.drawText(highscoreText, 0, (float) (canvas.getHeight()), smallGoldPaint);
+        canvas.drawText(shieldText, (float) (canvas.getWidth() * .4) + 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
+        canvas.drawText(shieldText, (float) (canvas.getWidth() * .4), (float) (canvas.getHeight()), greenPaint);
+        canvas.drawText(freeMovingText, (float) (canvas.getWidth() * .7) + 2, (float) (canvas.getHeight()) + 2, smallBgPaint);
+        canvas.drawText(freeMovingText, (float) (canvas.getWidth() * .7), (float) (canvas.getHeight()), greenPaint);
     }
 
     public boolean isPaused() {

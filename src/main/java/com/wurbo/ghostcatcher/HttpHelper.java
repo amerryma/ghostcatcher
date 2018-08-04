@@ -79,8 +79,7 @@ public class HttpHelper {
     }
 
     @TargetApi(9)
-    public static boolean setHighscore(String user, int score)
-            throws IOException {
+    public static boolean setHighscore(String user, int score) {
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                 .permitAll().build();
@@ -173,7 +172,7 @@ class UrlAsynTask extends AsyncTask<String, Integer, String> {
             httpRequest = new HttpGet(url.toURI());
 
             HttpClient httpclient = new DefaultHttpClient();
-            HttpResponse response = (HttpResponse) httpclient
+            HttpResponse response = httpclient
                     .execute(httpRequest);
 
             HttpEntity entity = response.getEntity();
